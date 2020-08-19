@@ -1,0 +1,1413 @@
+<% include ./partials/navbar %>
+<% include ./partials/footer %>
+<% include ./partials/messages %>
+<link rel="stylesheet" href="/stylesheets/table-sortable.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/scripts/table-sortable.js" ></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<p id="expenseIdpTag"> </p>
+<script>
+  $.ajax({
+  url: '/procurement/getProjectList',
+  type:'get',
+  dataType : 'json'
+  })
+  .done((response) => {
+  console.log('response '+JSON.stringify(response));
+  if(response.length > 0)
+  {
+  response.forEach((eachRpoject) => {
+  console.log('eachRpoject.name '+eachRpoject.name);
+  $('#projectName')
+  .append($("<option></option>")
+  .attr("value",eachRpoject.sfid)
+  .text(eachRpoject.name))
+  }); 
+  }
+  
+  })
+  .fail((jqXHR, status, err)=> {
+  console.log('jqXHR '+JSON.stringify(jqXHR));
+  console.log('error '+err);
+  })
+  $('#createAssetRequisitionFormButton').click(function() {
+   let projId = this.id;
+  console.log('Before Show create Asset Requisition Form Button Modal ');
+  $('#createAssetRequisitionForm').modal('show');
+  console.log('After Show Edit Modal ');
+  let lstActivityCodes = [];
+ 
+  $.ajax({
+       url : '/procurement/fetchActivityCodeforCreateNew',
+       data : {
+          projId : projId
+       },
+       dataType : 'json',
+       type : 'get'
+   })
+   .done((response) => {
+       console.log('response  '+JSON.stringify(response));
+       if(response.length > 0)
+           {
+           response.forEach((eachActivity) => {
+           console.log('eachActivity.name '+eachActivity.name);
+           $('#act')
+           .append($("<option></option>")
+           .attr("value",eachActivity.sfid)
+           .text(eachActivity.name))
+           }); 
+           }
+   })
+   .fail((jqXHR,text,err) => {
+       console.log('text  '+text + '  err '+err);
+   })
+ 
+  $('#createAssetRequisitionForm').modal('show');
+  $('#assetRequisitionSubmitbutton').on('click',function(event){
+  alert('clcker save button');
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+  // alert('Save Button Clicked !');
+  var $inputs = $('#assetRequisitionForm :input');
+  // not sure if you wanted this, but I thought I'd add it.
+  // get an associative array of just the values.
+  var values = {};
+  $inputs.each(function() {
+  values[this.name] = $(this).val();
+  //console.log('fomvalues=> '+JSON.stringify(values));
+  });
+  alert('formValues : '+JSON.stringify(values));
+  $.ajax({
+  url : '/procurement/insertAsssetForm',
+  type:'post',
+  data: values,
+  dataType : 'json'
+  })
+  .done((response) => {
+  console.log('resonse :'+JSON.stringify(response));
+  
+  })
+  .fail((jqXHR, status, error) => {
+  console.log('jqXHR '+JSON.stringify(jqXHR));
+  let errorHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert">'+ jqXHR.responseText+
+  '<button type="button" class="close" data-dismiss="alert-success" aria-label="Close">'+
+  '<span aria-hidden="true">&times;</span>'+
+  '</button>'+
+  '</div>';
+  $('#errorMessages').empty();
+  $('#errorMessages').append(errorHtml); 
+  }) 
+  })
+  })
+  
+  </script>
+
+<!--Asset Requisition List View-->
+<p id="assetIdpTag"> </p>
+<h3 style="text-align: center; margin-top: 20px;">Asset Requisition</h3>
+<div class="container">
+    <div class="row mt-5 mb-3 align-items-center">
+        <div class="col-md-5">
+          <button class="btn btn-primary btn-md bg-gray"  id="createAssetRequisitionFormButton">Create New</button>
+            <a  href="/procurement/" style="color: #555;" id="ref" ><i class="fa fa-refresh" style="font-size:34px; margin-left: 10px; margin-top: 30px;"></i> </a>
+               </div>
+        <div class="col-md-3">
+        <input type="text" class="form-control" placeholder="Search" id="searchField" style="margin-top: 5px;">
+        </div>
+        <div class="col-md-2 text-right">
+        <span class="pr-2">Rows Per Page:</span>
+        </div>
+        <div class="col-md-1">
+            <div class="d-flex justify-content-end">
+                <select class="custom-select" name="rowsPerPage" id="changeRows">
+                    <option value="5" selected>5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                </select>
+            </div>
+        </div>
+ </div>
+
+ <div id="AssetListViewTable" class="responsive ">
+
+ </div>
+
+</div>
+<!--Asset Requisition List View End-->
+
+
+<!--Create Asset Requisition Modal-->
+<p id="assetId"></p>
+ <div id="createAssetRequisitionForm" class="modal fade bs-example-modal-lg" tabindex ="-1" role="dialog" aria-labelledby="myLargeModalLabel" >
+ <div class="modal-dialog modal-lg" role="document">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h5 class="modal-title" id="createTaskModal">Create New Asset Requisition Form</h5>
+ <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+ <span aria-hidden="true">&times;</span>
+ </button>
+ </div>
+ <div class="modal-body">
+ <div class="">
+ <div id="errorMessages"></div>
+ <form id="assetRequisitionForm" class="needs-validation" novalidate >
+
+ <div class="form-group"> 
+ <div class="row">
+ <div class="col-md-6">
+ <label for="assetRequisitionName">Asset Requisition Name</label>
+ <input type="text" class="form-control" id="assetRequisitionName" placeholder="Asset Requisition Name" name="assetRequisitionName" required>
+ </div>
+
+ <div class="col-md-6">
+ <label for="validationTooltip01">Project/Department</label>
+ <select id="projectname" class="form-control projectname" name="projectname">
+ 
+ </select>
+ </div>
+ </div>
+ </div> 
+
+ <div class="form-group"> 
+ <div class="row">
+ <div class="col-md-6">
+ <label for="actualDate">Requested Closure Actual Date</label>
+ <input type="date" class="form-control" id="actualDate" value="" name="actualDate" >
+ </div>
+
+ <div class="col-md-6">
+ <label for="planDate">Requested Closure Plan Date</label>
+ <input type="date" class="form-control" id="planDate" value="" name="planDate" >
+ </div>
+ </div>
+ </div> 
+
+
+ <div class="form-group"> 
+ <div class="row">
+ <div class="col-md-6">
+ <label for="act">Activity code</label>
+ <select id="act" class="form-control act" name="act">
+
+</select>
+ </div>
+
+ <div class="col-md-6">
+ <!-- <label for="act">Activity code </label> -->
+ <!-- <input type="text" class="form-control" id="act" > -->
+ <label for="submittedBy">Submitted By</label>
+ <select id="submittedBy" name="submittedBy" class="form-control">
+ <option value="<%= objUser.sfid %>"><%= objUser.name %></option> 
+ </select>
+ </div>
+ </div>
+ </div> 
+
+
+
+ <div class="modal-footer">
+ <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+ <button type="submit" id="assetRequisitionSubmitbutton" class="btn btn-primary">Save</button>
+ </div>
+
+ </form>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+<!--Create Asset Requisition Modal End-->
+
+<!-- Asset Requisition Edit Form Modal -->
+
+<!-- Asset Requisition Form Modal -->
+
+<div id="assetRequisitionEditModal" class="modal fade ">
+  <div class="modal-dialog modal-lg" role="document">
+  <div class="modal-content">
+  <div class="modal-header">
+  <h5 class="modal-title">Asset Requisition Form Edit</h5>
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+  <span aria-hidden="true">&times;</span>
+  </button>
+  </div>
+  
+  <div class="modal-body" id="editModalBody" >
+  <form name="editAssetForm" id="editAssetForm" >
+  <div class="form-group">
+  <div class="row">
+  <div class="col-md-6">
+  <label for="assetName">Asset Requistion Name</label>
+  <input type="text" class="form-control" id="assetName" value="" name="assetName" required>
+  </div>
+  
+  <div class="col-md-6">
+  <label for="projectName">Project Name</label>
+  <input type="text" class="form-control" id="projectName" value="" name="projectName" readonly="true">
+  <!-- <select id="projectName" class="custom-select custom-select-sm form-control" name="projectName">
+  </select> -->
+ 
+  </div>
+  </div>
+  </div>
+  
+ 
+  <div class="form-group">
+  <div class="row">
+  <div class="col-md-6">
+  <label for="closureActualDate">Requested Closure Actual Date</label>
+  <input type="date" class="form-control" id="closureActualDate" value="" name="closureActualDate" >
+  </div>
+  
+  <div class="col-md-6">
+  <label for="closurePlanDate">Requested Closure Plan Date</label>
+  <input type="date" class="form-control" id="closurePlanDate" value="" name="closurePlanDate" >
+  </div>
+  </div>
+  </div>
+ 
+  <div class="form-group">
+  <div class="row">
+ 
+   <div class="col-md-6">
+     <label for="activityCode">Activity Code</label>
+     <select id="activityCode" class="custom-select custom-select-sm form-control" name="activityCode">
+    <!--  <option value="">--None--</option> -->
+     </select> 
+     </div>
+  
+ 
+  <div class="col-md-6">
+    <label for="attachment">P.O. Attachment</label>
+    <select id="attachment" class="custom-select custom-select-sm form-control" name="attachment">
+    <option value="">--None--</option>
+    <option value="No">No</option>
+    <option value="Yes">Yes</option>
+    <option value="Not Required	">Not Required</option>
+    </select> 
+    </div>
+  </div>
+  </div>
+ 
+  <div class="form-group">
+     <div class="row">  
+     <div class="col-md-6">
+       <label for="paymentStatus">Final payment Status</label>
+       <select id="paymentStatus" class="custom-select custom-select-sm form-control" name="paymentStatus" readonly="true">
+       <option value="null">None</option>
+       <option value="Released">Released</option>
+       <option value="Rejected">Not Released</option>
+       </select> 
+       </div>
+     </div>
+     </div>
+ 
+  <div class="form-group">
+     <div class="row">
+     <div class="col-md-12">
+     <label for="" ><h5 style="background-color:#d3d3d3";>Purchase Order Checklist</h5></label>
+     </div>
+     </div>
+     </div>
+     
+    
+     <div class="form-group">
+     <div class="row">
+     <div class="col-md-6">
+     <label for="quotations">if less than 3 quotations, specify Reason</label>
+     <select id="quotations" class="custom-select custom-select-sm form-control" name="quotations" >
+         <option value="true">True</option>
+         <option value="false">False</option>
+         </select> 
+     </div>
+     
+     <div class="col-md-6">
+     <label for="reason">reason for non-registered GST Vendor</label>
+     <select id="reason" class="custom-select custom-select-sm form-control" name="reason" >
+         <option value="true">True</option>
+         <option value="false">False</option>
+         </select> 
+    </div>
+     </div> 
+     </div>
+    
+     <div class="form-group">
+     <div class="row">
+     <div class="col-md-6">
+     <label for="pricing">Pricing Terms/Cost comparison</label>
+     <!-- <input type="checkbox"  id="pricing" value="" name="pricing" > -->
+     <select id="pricing" class="custom-select custom-select-sm form-control" name="pricing" >
+         <option value="true">True</option>
+         <option value="false">False</option>
+         </select> 
+     </div>
+     
+     <div class="col-md-6">
+     <label for="deliveryPlace">Delivery Terms: Delivery Place</label>
+     <input type="text" class="form-control" id="deliveryPlace" value="" name="deliveryPlace" >
+     </div>
+     </div> 
+     </div>
+    
+     <div class="form-group">
+     <div class="row">
+     <div class="col-md-6">
+     <label for="deliveryTime">Delivery Terms: Delivery Time</label>
+     <input type="date" class="form-control" id="deliveryTime" value="" name="deliveryTime" >
+     </div>
+     
+     <div class="col-md-6">
+         <label for="deliveryCost">Delivery cost Incl. / Excl. of Transport</label>
+         <input type="text" class="form-control" id="deliveryCost" value="" name="deliveryCost" >
+       </div>
+ 
+     <div class="col-md-6">
+     <input type="hidden" class="form-control" id="assetsfid" value="" name="assetsfid" >
+     
+     </div>
+     </div> 
+     </div>
+    
+  <div class="form-group">
+  <div class="row">
+  <div class="col-md-12">
+  <label for="" colspan="6"><h5 style="background-color:#d3d3d3";>Received Stage(to be Filled By Raiser)</h5></label>
+  </div>
+  </div>
+  </div>
+  
+ 
+  <div class="form-group">
+  <div class="row">
+  <div class="col-md-6">
+  <label for="status">Status</label>
+  <select id="status" class="custom-select custom-select-sm form-control" name="status">
+  <option value="">--None--</option>
+  <option value="Open">Open</option>
+  <option value="Closed">Closed</option>
+  </select>
+  </div>
+ 
+  <div class="col-md-6">
+  <label for="amount">Goods/Service Received</label>
+  <select id="payement" class="custom-select custom-select-sm form-control" name="payement">
+  <option value="">--None--</option>
+  <option value="Received">Received</option>
+  <option value="Not Received">Not Received</option>
+  </select> 
+  </div>
+  </div> 
+  </div>
+ 
+  <div class="form-group">
+  <div class="row">
+  <div class="col-md-6">
+  <label for="receiverName">Receiver Name</label>
+  <input type="text" class="form-control" id="receiverName" value="" name="receiverName" >
+  </div>
+  
+  <div class="col-md-6">
+  <label for="receivedQuantity">Received Quantity</label>
+  <input type="text" class="form-control" id="receivedQuantity" value="" name="receivedQuantity" >
+  </div>
+  </div> 
+  </div>
+ 
+  <div class="form-group">
+  <div class="row">
+  <div class="col-md-6">
+  <label for="goodsDate">Date Of Receiving( Goods)</label>
+  <input type="date" class="form-control" id="goodsDate" value="" name="goodsDate" >
+  </div>
+  
+  <div class="col-md-6">
+  <input type="hidden" class="form-control" id="assetid" value="" name="assetid" >
+  
+  </div>
+  </div> 
+  </div>
+ 
+ 
+ 
+ 
+  <div class="modal-footer">
+  <button type="submit" class="btn btn-primary" id="editassetForm" data-dismiss="modal">Save</button>
+  <button type="button" class="btn btn-danger data-dismiss="modal">Close</button>
+  </div>
+  </form>
+  </div>
+  
+  </div>
+ </div>
+ </div>
+ 
+ 
+  <!-- Asset Requisition Edit Modal End -->
+  
+  <!-- Asset Requisition Edit Modal End -->
+
+<!--Approval Pop up-->
+
+<div id="approvalCommentModal" class="modal fade">
+  <div class="modal-dialog" role="document">
+  <div class="modal-content">
+  <div class="modal-header">
+  <h5 class="modal-title" id="commentModalHeading">Approval Comment</h5>
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+  <span aria-hidden="true">&times;</span>
+  </button>
+  </div>
+  <div class="modal-body">
+  <form name="approval" id="approvalpopup">
+  <div class="form-group">
+  <label for="commentTextarea">Comment</label>
+  <textarea class="form-control" id="commentTextarea" rows="3" autocomplete="off"></textarea>
+  </div>
+  <div class="form-group"> 
+  <div class="row">
+  <div class="col-md-6">
+  <input type="hidden" class="form-control" value="" id="expenseId" name="expenseId" required>
+  </div>
+  </div>
+  
+  </div>
+  </div>
+  <div class="modal-footer">
+  <button type="button" class="btn btn-primary" id="submitForApproval" >Submit</button>
+  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+  </div>
+  </div>
+  </div>
+</form>
+  </div> 
+
+
+<!--Approval Pop up end-->
+
+<!--Accounts Approval Pop up-->
+
+<div id="accountsApprovalCommentModal" class="modal fade">
+  <div class="modal-dialog" role="document">
+  <div class="modal-content">
+  <div class="modal-header">
+  <h5 class="modal-title" id="commentModalHeading">Accounts Approval Comment</h5>
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+  <span aria-hidden="true">&times;</span>
+  </button>
+  </div>
+  <div class="modal-body">
+  <form name="accountsapproval" id="accountsapprovalpopup">
+  <div class="form-group">
+  <label for="commentTextarea">Comment</label>
+  <textarea class="form-control" id="acccommentTextarea" rows="3" autocomplete="off"></textarea>
+  </div>
+  <div class="form-group"> 
+  <div class="row">
+  <div class="col-md-6">
+  <input type="hidden" class="form-control" value="" id="expenseId" name="expenseId" required>
+  </div>
+  </div>
+  
+  </div>
+  </div>
+  <div class="modal-footer">
+  <button type="button" class="btn btn-primary" id="submitForAccApproval" >Submit</button>
+  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+  </div>
+  </div>
+  </div>
+</form>
+  </div> 
+
+
+<!--Accounts Approval Pop up end-->
+
+<!-- Modal Popup For Asset Requisition Detail & Their Related data -->
+
+
+
+<div class="modal fade" id="popup">
+  <div class="modal-dialog modal-lg">
+  <div class="modal-content">
+ 
+  <!-- Modal Header -->
+  <div class="modal-header">
+  <h4 class="modal-title">Asset Requistion Form </h4>
+  <button type="button" class="close" data-dismiss="modal">&times;</button>
+  </div>
+ 
+  <!-- Modal body -->
+  <div class="modal-body">
+  <div class="row">
+  <div class="col-md-12">
+  <nav>
+  <div class="nav nav-tabs nav-fill" id="nav-tab" role="tablist">
+  <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Details</a>
+  <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Related</a>
+  </div>
+  </nav>
+  <div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+  <!-- Particular Asset Details -->
+  <table id="assetDetails" class="table table-hover striped">
+  <!-- Inside code is handled by Jquery to add dyanamic Content -->
+</div>  
+</table>
+  <!-- Particular Asset Details-->
+  </div>
+                             
+  <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+    <div class="accordion" id="accordionExample">
+                                   
+    <div class="card">
+    <div class="card-header" id="headingOne">
+    <h5 class="mb-0">
+    <button class="btn btn-link text-left" type="pettyCashButton"
+    data-toggle="collapse" data-target="#collapseOne"
+    aria-expanded="true" aria-controls="collapseOne">
+    <i class="fa fa-angle-double-right mr-3"></i>Procurement-Non IT
+    </button>
+    <!-- <button class="btn btn-primary float-right" id="pettyCashButton" >New</button> -->
+    <a href="#" target="_blank" class="btn btn-primary float-right procurementNonIT" id="pettyCashButton" style="color:white;" >New</a>
+    </h5>
+    </div>
+   
+    <div id="collapseOne" class="collapse show fade" aria-labelledby="headingOne" data-parent="#accordionExample">
+    <div class="card-body">
+    <table id="procuremnetNonItTable" class="table table-hover striped">
+    </table>
+    </div>
+    </div>
+    </div>
+                                       
+    <div class="card">
+    <div class="card-header" id="headingTwo">
+    <h5 class="mb-0">
+    <button class="btn btn-link collapsed text-left" type="button"
+    data-toggle="collapse" data-target="#collapseTwo"
+    aria-expanded="false" aria-controls="collapseTwo">
+    <i class="fa fa-angle-double-right mr-3"></i>Procurement-IT
+    </button>
+    <!-- <button class="btn btn-primary float-right">New</button> -->
+    <a href="#" class="btn btn-primary float-right procurementIT" style="color:white;">New</a>
+    </h5>
+    </div>
+    <div id="collapseTwo" class="collapse fade" aria-labelledby="headingTwo" data-parent="#accordionExample">
+    <div class="card-body">
+    <table id="procuremnetItTable" class="table table-hover striped">
+    <thead>
+    <th>Procuremnet_-IT ID</th>
+    <th>Items</th>
+    <th>Quantity</th>
+    <th>Budget</th>
+    </thead>
+    </table>
+    </div>
+    </div>
+    </div>
+   
+    
+    <div class="card">
+    <div class="card-header" id="headingThree">
+    <h5 class="mb-0">
+    <button class="btn btn-link collapsed text-left" type="button"
+    data-toggle="collapse" data-target="#headingThree"
+    aria-expanded="false" aria-controls="headingThree">
+    <i class="fa fa-angle-double-right mr-3"></i>Approval
+    </button>
+    <!-- <button class="btn btn-primary float-right">New</button> -->
+    <a href="#" class="btn btn-primary float-right procurementIT" style="color:white;">New</a>
+    </h5>
+    </div>
+    <div id="headingThree" class="collapse fade" aria-labelledby="headingThree" data-parent="#accordionExample">
+    
+    <div style="overflow-x:auto;">
+    <table id="approvalTable" class="table table-hover striped">
+    <thead>
+    <th>Name</th>
+    <th>Type</th>
+    <th>Date</th>
+    
+    </thead>
+    </table>
+    </div>
+    </div>
+    </div>
+   
+    <div class="card">
+    <div class="card-header" id="headingOne">
+    <h5 class="mb-0">
+    <button class="btn btn-link text-left" type="pettyCashButton"
+    data-toggle="collapse" data-target="#collapseOne"
+    aria-expanded="true" aria-controls="collapseOne">
+    <i class="fa fa-angle-double-right mr-3"></i>Notes/Attachments 
+    </button>
+    <!-- <button class="btn btn-primary float-right" id="pettyCashButton" >New</button> -->
+    <a href="#" target="_blank" class="btn btn-primary float-right notes" id="notes" style="color:white;" >New</a>
+    </h5>
+    </div>
+   
+    <div id="collapseOne" class="collapse show fade" aria-labelledby="headingOne" data-parent="#accordionExample">
+    <div class="card-body">
+    <table id="notesbuttontable" class="table table-hover striped">
+    </table>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+   
+    </div>
+ 
+  <!-- Modal footer -->
+  <div class="modal-footer">
+  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+  </div>
+ 
+  </div>
+  </div>
+ </div>
+
+<script>
+    $(document).ready(function(){
+        let columns ={
+          sequence: 'Sr No.',
+          editbutton : 'Action',
+          name: 'Asset Requisition Name',
+          projectname: 'Project Name',
+          noit: 'Number of IT Product',
+          nononit: 'Number of Non IT Product',
+          itamount: 'IT Amount',
+          nonitamount: 'Non IT Amount' ,
+          totalamount: 'Total Amount', 
+          approvalbutton : 'Approval', 
+          accountsapprovalbutton : 'Accounts Approval'
+
+        }
+        var table = $('#AssetListViewTable').tableSortable({
+            data :[],
+            columns,
+            searchField: '#searchField',
+            sorting: true,
+            rowsPerPage: 5,
+            pagination:true,
+            tableWillMount: () => {
+                console.log('table will mount')
+                
+            },
+            tableDidMount: () => {
+                console.log('table did mount');
+
+                $('#spinner').hide();
+            },
+            tableWillUpdate: () => {
+                console.log('table will update')
+            //  table.refresh();
+            // onLoadTask();
+            },
+            tableDidUpdate: () => {
+            console.log('table did update');
+             anchorClickFunctionalities();
+            additionalEditFunctionality();
+            approvalFunctionality();
+            accountsApprovalFunctionality();
+            
+            },
+            tableWillUnmount: () => console.log('table will unmount'),
+            tableDidUnmount: () => console.log('table did unmount'),
+            onPaginationChange: function(nextPage, setPage) {
+                setPage(nextPage);
+            },
+        
+        });
+        $('#changeRows').on('change', function() {
+            table.updateRowsPerPage(parseInt($(this).val(), 10));
+            })
+    
+        /    $('#refresh').click(function() {
+                table.refresh(true);
+                onLoadTask();
+            })    
+            $.ajax({
+                url :'/procurement/assetDetails',
+                type:'get',
+                dataType: 'json'
+           })
+           .done((response) => {
+               console.log('response it : '+JSON.stringify(response));
+               table.setData(response, columns);
+               anchorClickFunctionalities();
+              
+            })
+          .fail((jqXHR, status, error) =>{
+              console.log('jqXHR  : '+JSON.stringify(jqXHR));
+              console.log('error  : '+error);
+            })
+    })
+
+      $(document).ready(() => {
+      $('assetId').hide();
+      
+      $('a.procurementNonIT').click(() => {
+      console.log('procurementNonIT anchor tag ');
+      var assetId = document.getElementById('expenseIdpTag').innerHTML;
+      console.log('assetId : '+assetId);
+      location.assign('/procurement/nonItProducts/'+assetId);
+      });
+      $('a.procurementIT').click(() => {
+      console.log('procurementIT anchor tag ');
+      var assetId = document.getElementById('expenseIdpTag').innerHTML;
+      console.log('assetId : '+assetId);
+      location.assign('/procurement/itProducts/'+assetId);
+      });
+      $('a.notes').on('click',function(event){
+      //alert('Hello'+this.id);
+      var assetId = document.getElementById('expenseIdpTag').innerHTML;
+      console.log('assetId notes : '+assetId);
+      location.assign('/procurement/upload/'+assetId);
+      })
+      $('.approvalCommentModalButton').on('click',function(event){
+      //alert('Hello'+this.id);
+      event.stopImmediatePropagation();
+      event.stopPropagation();
+      let assetRequisitionFormId = this.id;
+      $('#approvalCommentModal').modal('show');
+      $('#submitForApproval').on('click', function(e){
+      e.stopImmediatePropagation();
+      e.stopPropagation();
+      let comment = document.getElementById('commentTextarea').value;
+      alert('comment : '+comment);
+      $.post('/procurement/sendProcurementApproval',{assetRequisitionFormId:assetRequisitionFormId, comment: comment }, function(response){
+      alert(response);
+      $('#approvalCommentModal').modal('hide');
+      }).fail(function(jqXHR, status, error){
+      
+      //$('#approvalCommentModal').modal('hide');
+      })
+      });
+      });
+      $('.approvalAccountsCommentModalButton').on('click',function(event){
+      event.stopImmediatePropagation();
+      event.stopPropagation();
+      let assetRequisitionFormId = this.id;
+      $('#approvalCommentModal').modal('show');
+      $('#submitForApproval').on('click', function(e){
+      e.stopImmediatePropagation();
+      e.stopPropagation();
+      let comment = document.getElementById('acccommentTextarea').value;
+      alert('comment : '+comment);
+      $.post('/procurement/sendProcurementAccountsApproval',{assetRequisitionFormId:assetRequisitionFormId, comment: comment }, function(response){
+      alert(response);
+      $('#approvalCommentModal').modal('hide');
+      })
+      .fail(function(jqXHR, status, error){
+      //$('#approvalCommentModal').modal('hide');
+      })
+      })
+      })
+      })
+    $('#assetIdpTag').hide();
+   var assetIds;
+    function anchorClickFunctionalities()
+    {
+        $('a.assetTag').on('click',function(event){
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            event.stopPropagation();
+            $('#expenseTable').empty();
+            $('#expenseIdpTag').hide();
+            let assetId = $(this).attr('href');
+            console.log('assetId   : '+assetId);
+          document.getElementById('expenseIdpTag').innerHTML = assetId;
+          $("#popup").modal("show");
+            $.ajax({
+                type : 'GET',
+                url  : '/procurement/details',
+                data : {
+                    'assetId' : assetId
+                },
+                dataType : 'json',
+                beforeSend: function()
+              {
+                $('#expenseDetailsSpinner').show();
+              }
+            })
+            .done((assetDetails) =>{
+    console.log('assetDetails : '+JSON.stringify(assetDetails));
+    $('#procuremnetItTable').empty();$('#procuremnetNonItTable').empty();
+    if(assetDetails.assetFormDetails.length > 0)
+    {
+    console.log('Inside Asset Details'); 
+    let assetDetailsTableRows = ''; 
+    assetDetails.assetFormDetails.forEach((assetDetailsRecord) => {
+    let plane = new Date(assetDetailsRecord.requested_closure_plan_date__c);
+    plane.setHours(plane.getHours() + 5);
+    plane.setMinutes(plane.getMinutes() + 30);
+    let planDt = plane.toLocaleString().split(',')[0];
+    let rec = new Date(assetDetailsRecord.date_of_receiving_goods__c);
+    rec.setHours(rec.getHours() + 5);
+    rec.setMinutes(rec.getMinutes() + 30);
+    let receiveDate = rec.toLocaleString().split(',')[0];
+    let actu = new Date(assetDetailsRecord.requested_closure_actual_date__c);
+    actu.setHours(actu.getHours() + 5);
+    actu.setMinutes(actu.getMinutes() + 30);
+    let actualDt = actu.toLocaleString().split(',')[0];
+    console.log('Inside Loop'+actualDt);
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong>Asset Requisition Name<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.name+'</td>';
+    assetDetailsTableRows += '<td><strong>Activity Code<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.actname+'</td>';
+    assetDetailsTableRows += '</tr>'; 
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong>Requested Closure Plan Date<strong></td>';
+    assetDetailsTableRows += '<td>'+ planDt+'</td>';
+    assetDetailsTableRows += '<td><strong>Requested Closure Actual Date<strong></td>';
+    assetDetailsTableRows += '<td>'+actualDt+'</td>';
+    assetDetailsTableRows += '</tr>'; 
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong>Submitted By Heroku User<strong></td>';
+    assetDetailsTableRows += '<td>'+ '<%=objUser.name %>'+'</td>';
+    assetDetailsTableRows += '<td><strong>Project/Department<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.projname +'</td>';
+    assetDetailsTableRows += '</tr>'; 
+    
+    
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td colspan="4" style="background-color:#d3d3d3;"><h5>Item Metrics</h5></td>'; 
+    assetDetailsTableRows += '</tr>';
+    
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong>Number Of IT Product<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.number_of_it_product__c+'</td>';
+    assetDetailsTableRows += '<td><strong>Number of Non IT Product<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.number_of_non_it_product__c+'</td>';
+    assetDetailsTableRows += '</tr>'; 
+    
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td colspan="4" style="background-color:#d3d3d3;"><h5>Approval Status </h5></td>'; 
+    assetDetailsTableRows += '</tr>';
+    
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong> Project Manager/Reporting Man. Approval<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.manager_approval__c+'</td>';
+    assetDetailsTableRows += '<td><strong>Procurement Head Approval<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord. procurement_head_approval__c+'</td>';
+    assetDetailsTableRows += '</tr>';
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong>Procurement Comt. Approval for fortnight<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.procurement_comt_approval_for_fortnight__c+'</td>';
+    assetDetailsTableRows += '<td><strong>Management Approval(GST+fortnight)<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.management_approval_for_fortnight_limit__c+'</td>';
+    assetDetailsTableRows += '</tr>';
+    
+        assetDetailsTableRows += '<tr>';
+        assetDetailsTableRows += '<td><strong>Management Approval<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.management_approval__c+'</td>';
+    assetDetailsTableRows += '<td><strong>Chairperson Approval<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.chairperson_approval__c+'</td>';
+    assetDetailsTableRows += '</tr>';
+    
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong> Management Approval(less than 3 quotes)<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.management_approval_less_than_3_quotes__c+'</td>';
+    assetDetailsTableRows += '<td><strong>Management Approval (Activity Code)<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.management_approval_activity_code__c+'</td>';
+    assetDetailsTableRows += '</tr>';
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong>Procurement Committee Approval<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.procurement_committee_approval__c+'</td>';
+    
+    assetDetailsTableRows += '</tr>';
+    
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td colspan="4" style="background-color:#d3d3d3;"><h5>Account Status</h5></td>'; 
+    assetDetailsTableRows += '</tr>';
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong> Accounts Approval<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.accounts_approval__c+'</td>';
+    assetDetailsTableRows += '<td><strong>UTR Number/Transaction Details<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.utr_number_transaction_details__c+'</td>';
+    assetDetailsTableRows += '</tr>';
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong>Advance Payment Status<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.advance_payment_status__c+'</td>';
+    assetDetailsTableRows += '<td><strong>Final Payment Status<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.payment_status__c+'</td>';
+    assetDetailsTableRows += '</tr>';
+    assetDetailsTableRows += '<tr>';
+        assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong>P.O attachment<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.p_o_attachment__c +'</td>';
+    assetDetailsTableRows += '<td><strong>PO Attachment URL<strong></td>';
+    if(assetDetailsRecord.po_attachment_url__c!="demo"){
+    if(assetDetailsRecord.po_attachment_url__c!=null){
+    assetDetailsTableRows += '<td>'+'<a href="'+assetDetailsRecord.po_attachment_url__c+'" target="_blank">Click to View </a></td>';
+    }
+    }
+    else{
+    assetDetailsTableRows +='<td></td>';
+    }
+    assetDetailsTableRows += '</tr>'; 
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td colspan="4" style="background-color:#d3d3d3;"><h5>Amount Information</h5></td>'; 
+    assetDetailsTableRows += '</tr>';
+    
+    assetDetailsTableRows += '<tr>';
+    assetDetailsTableRows += '<td><strong>Procurement-IT total amount<strong></td>';
+    assetDetailsTableRows += '<td>'+assetDetailsRecord.procurement_it_total_amount__c+'</td>';
+      assetDetailsTableRows += '<td><strong>Procurement-Non IT total amount<strong></td>';
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.procurement_non_it_total_amount__c+'</td>';
+      assetDetailsTableRows += '</tr>'; 
+      
+      assetDetailsTableRows += '<tr>';
+      assetDetailsTableRows += '<td><strong>Total Amount<strong></td>';
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.total_amount__c+'</td>';
+      assetDetailsTableRows += '<td><strong><strong></td>';
+      assetDetailsTableRows += '<td></td>';
+      assetDetailsTableRows += '</tr>'; 
+      assetDetailsTableRows += '<tr>';
+      assetDetailsTableRows += '<td colspan="4" style="background-color:#d3d3d3;"><h5>Purchase Order Checklist</h5></td>'; 
+      assetDetailsTableRows += '</tr>';
+      assetDetailsTableRows += '<tr>';
+      assetDetailsTableRows += '<td><strong>if < 3 quotations, specify Reason<strong></td>';
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.if_3_quotations_specify_reason__c+'</td>';
+      assetDetailsTableRows += '<td><strong>reason for non-registered GST Vendor<strong></td>';
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.reason_for_non_registered_gst_vendor__c+'</td>';
+      assetDetailsTableRows += '</tr>'; 
+      assetDetailsTableRows += '<tr>';
+      assetDetailsTableRows += '<td><strong>Pricing Terms/Cost comparison<strong></td>';
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.pricing_terms_cost_comparison__c+'</td>';
+      assetDetailsTableRows += '<td><strong>Delivery Terms: Delivery Place<strong></td>';
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.delivery_terms_delivery_place__c+'</td>';
+      assetDetailsTableRows += '</tr>'; 
+      assetDetailsTableRows += '<tr>';
+      assetDetailsTableRows += '<td><strong>Delivery Terms : Delivery Time<strong></td>';
+          if(assetDetailsRecord.delivery_terms_delivery_time__c!=null){
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.delivery_terms_delivery_time__c.split('T')[0]+'</td>';
+            }
+         else{
+      assetDetailsTableRows +='<td></td>';
+            }
+      assetDetailsTableRows += '<td><strong>Delivery cost Incl. / Excl. of Transport<strong></td>';
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.delivery_cost_incl__c+'</td>';
+      assetDetailsTableRows += '</tr>'; 
+      assetDetailsTableRows += '<tr>';
+      assetDetailsTableRows += '<td colspan="4" style="background-color:#d3d3d3;"><h5>Received Stage</h5></td>'; 
+      assetDetailsTableRows += '</tr>';
+      assetDetailsTableRows += '<tr>';
+      assetDetailsTableRows += '<td><strong>Status<strong></td>';
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.status__c+'</td>';
+      assetDetailsTableRows += '<td><strong>Goods/Service Received<strong></td>';
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.payment_received_acknowledgement__c+'</td>';
+      assetDetailsTableRows += '</tr>'; 
+      
+      assetDetailsTableRows += '<tr>';
+      assetDetailsTableRows += '<td><strong>Receiver Name<strong></td>';
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.receiver_name__c+'</td>';
+      assetDetailsTableRows += '<td><strong>Received Quantity<strong></td>';
+      assetDetailsTableRows += '<td>'+assetDetailsRecord.received_quantity_goods__c+'</td>';
+      assetDetailsTableRows += '</tr>'; 
+      
+      assetDetailsTableRows += '<tr>';
+      assetDetailsTableRows += '<td><strong>Date Of Receiving (Goods)<strong></td>';
+      assetDetailsTableRows += '<td>'+receiveDate+'</td>';
+      assetDetailsTableRows += '<td><strong><strong></td>';
+      assetDetailsTableRows += '<td></td>';
+      assetDetailsTableRows += '</tr>';
+      })
+      $('#assetDetails').html(assetDetailsTableRows);
+      
+      }
+      if(assetDetails.nonItProducts.length > 0)
+                    {
+                        let nonItProductTable = '';
+                        nonItProductTable+='<thead>  <th>Procuremnet_Non-IT ID</th><th>Items</th><th>Quantity</th><th>Budget</th></thead>';
+                        assetDetails.nonItProducts.forEach((eachNonIt) => {
+                            nonItProductTable += '<tr><td>'+eachNonIt.name +'</td>';
+                            nonItProductTable += '<td>'+eachNonIt.items__c +'</td>';
+                            nonItProductTable += '<td>'+eachNonIt.quantity__c +'</td>';
+                            nonItProductTable += '<td>'+eachNonIt.budget__c +'</td></tr>';  
+                        })
+                        nonItProductTable+=  '<td colspan="6"><center><a target="_blank" href="/procurement/getNonItProcurementListVIew/'+assetId+'">View All</a></centre></td>';
+                            $('#procuremnetNonItTable').empty();
+                            $('#procuremnetNonItTable').append(nonItProductTable);
+                    }
+                    if(assetDetails.itProducts.length > 0)
+                    {
+                        let itProductTable = '';
+                        itProductTable+='<thead>  <th>ProcuremnetName</th><th>Items</th><th>Quantity</th><th>Budget</th></thead>';
+                        assetDetails.itProducts.forEach((eachIt)=> {
+                            console.log('chdc'+JSON.stringify(eachIt));
+                            itProductTable += '<tr><td>'+eachIt.name +'</td>';
+                            itProductTable += '<td>'+eachIt.items__c +'</td>';
+                            itProductTable += '<td>'+eachIt.quantity__c +'</td>';
+                            itProductTable += '<td>'+eachIt.budget__c +'</td></tr>';      
+                        })
+                        itProductTable+=  '<td colspan="6"><center><a target="_blank" href="/procurement/getProcurementItListView/'+assetId+'">ViewlAll</a></centre></td>';
+                            $('#procuremnetItTable').empty();
+                        $('#procuremnetItTable').append(itProductTable);   
+                    }
+                    if(assetDetails.approvals.length > 0)
+                    {
+                        let approvalHtml = '';
+                        approvalHtml+='<thead><th>Name </th><th>Type</th> <th>Status</th> <th>Approver Emails</th></thead>';
+                        assetDetails.approvals.forEach((eachApproval)=> {
+                            approvalHtml += '<tr><td>'+eachApproval.name +'</td>';
+                            approvalHtml += '<td>'+eachApproval.approval_type__c +'</td>';
+                            approvalHtml += '<td>'+eachApproval.status__c +'</td>';
+                            approvalHtml += '<td>'+eachApproval.approver_s_emails__c +'</td></tr>';      
+                        })
+                        approvalHtml+=  '<td colspan="6"><center><a target="_blank" href="/procurement/getProcurementItListView/'+assetId+'">View All</a></centre></td>';
+                        $('#approvalTable').empty();
+                        $('#approvalTable').append(approvalHtml);   
+                    }
+
+                })
+                .fail((jqXHR, status, error) =>{
+                  console.log('jqXHR  : '+JSON.stringify(jqXHR));
+                  console.log('error  : '+error);
+                })
+                $("#popup").modal("show");
+                    return false;
+                  })
+              
+              }
+              $.ajax({
+            url: '/procurement/getProjectList',
+            type:'get',
+            dataType : 'json'
+        })
+        .done((response) => {
+            console.log('response inside project list '+JSON.stringify(response));
+            if(response.length > 0)
+            {
+                response.forEach((eachRpoject) => {
+                    console.log('eachRpoject.name  '+eachRpoject.name);
+                    $('#projectName')
+                    .append($("<option></option>")
+                    .attr("value",eachRpoject.sfid)
+                    .text(eachRpoject.name))
+                });   
+            }
+            
+        })
+        .fail((jqXHR, status, err)=> {
+                console.log('jqXHR  '+JSON.stringify(jqXHR));
+                console.log('error  '+err);
+        })
+
+              //additionalEditFunctionality
+
+ function additionalEditFunctionality()
+    {
+      $(document).ready(() => {
+      $('assetId').hide();
+      $('.assetRequisitionEditModal').on('click',function(event){
+        event.stopImmediatePropagation();
+     event.stopPropagation();
+      let assetId = this.id;
+      console.log('Before Show Edit Modal ');
+      $('#assetRequisitionEditModal').modal('show');
+       console.log('After Show Edit Modal ');
+ /*let lstActivityCodes = [];
+ $.ajax({
+      url : '/procurement/fetchActivityCode',
+      data : {
+         assetId : assetId
+      },
+      dataType : 'json',
+      type : 'get'
+  })
+  .done((response) => {
+      console.log('response  '+JSON.stringify(response));
+      if(response.length > 0)
+      { 
+       
+      }
+  })
+  .fail((jqXHR,text,err) => {
+      console.log('text  '+text + '  err '+err);
+  })
+*/
+    $.get("/procurement/assetEditDetails",{assetId : assetId},
+    function(assetDetailsRecord){
+    //console.log('Edit assetDetails : '+JSON.stringify(assetDetailsRecord));
+    let assetRecord = assetDetailsRecord.asset[0];
+      
+    //let activityCodes = assetDetailsRecord.activity[0];
+    let activityCodes = [];
+    for(let i=0; i< assetDetailsRecord.activity.length ;i++)
+          {
+            activityCodes.push(assetDetailsRecord.activity[i]);
+          }
+          console.log('Asset Details list'+JSON.stringify(assetRecord));
+      console.log('Activity Codes'+JSON.stringify(activityCodes));
+      let strReceivingGoodsDate=''; 
+      let strclousreActualDate='';
+      let clousrePlanDate =''; 
+      let clousreActualDate = new Date(assetRecord.requested_closure_actual_date__c);
+      console.log('clousreActualDate '+clousreActualDate);
+      if(assetRecord.requested_closure_actual_date__c!=null){
+      strclousreActualDate = assetRecord.requested_closure_actual_date__c.split('T')[0];
+      }
+      
+      // console.log('strclousreActualDate : '+strclousreActualDate);
+      if(assetRecord.requested_closure_plan_date__c!=null)
+      {
+      clousrePlanDate = assetRecord.requested_closure_plan_date__c.split('T')[0];
+      }
+      if(assetRecord.date_of_receiving_goods__c!=null){
+      strReceivingGoodsDate = assetRecord.date_of_receiving_goods__c.split('T')[0];
+      console.log('strReceivingGoodsDate : '+strReceivingGoodsDate +' :clousrePlanDate '+ clousrePlanDate);
+      }
+      for(let i=0; i< activityCodes.length ;i++)
+      {
+        $('#activityCode')
+        .append($("<option></option>")
+        .attr("value",activityCodes[i].sfid)
+        .text(activityCodes[i].name));	
+      }
+    /*   $('#activityCode').on('change',function(){
+          let taskId = this.value;
+          let selectedCode = activityCodes.filter((eachCode)=> {
+            if(eachCode.sfid == taskId)
+              return eachCode;
+          })
+          let label = selectedCode[0].name;
+          document.getElementById('projectTask').value = label;
+        //  $('#projectTask'+cnt).value = label;
+          console.log('label  :'+label+' value : '+taskId);
+      }) -->
+      */
+      
+      document.forms["editAssetForm"]["assetName"].value = assetRecord.name;
+ document.forms["editAssetForm"]["closureActualDate"].value = strclousreActualDate;
+ document.forms["editAssetForm"]["closurePlanDate"].value =clousrePlanDate;
+ document.forms["editAssetForm"]["projectName"].value = assetRecord.projname;
+ document.forms["editAssetForm"]["activityCode"].value = assetRecord.activity_code_project__c;
+ document.forms["editAssetForm"]["attachment"].value = assetRecord.p_o_attachment__c; 
+ document.forms["editAssetForm"]["status"].value = assetRecord.status__c; 
+ document.forms["editAssetForm"]["payement"].value = assetRecord.payment_received_acknowledgement__c;
+ 
+ document.forms["editAssetForm"]["paymentStatus"].value = assetRecord.payment_status__c;
+ document.forms["editAssetForm"]["receiverName"].value = assetRecord.receiver_name__c;
+ 
+ document.forms["editAssetForm"]["receivedQuantity"].value = assetRecord.received_quantity_goods__c;
+ 
+ document.forms["editAssetForm"]["goodsDate"].value = strReceivingGoodsDate;
+ document.forms["editAssetForm"]["assetsfid"].value = assetRecord.sfid;
+ document.forms["editAssetForm"]["quotations"].value = assetRecord.if_3_quotations_specify_reason__c;
+ document.forms["editAssetForm"]["reason"].value = assetRecord.reason_for_non_registered_gst_vendor__c;
+ document.forms["editAssetForm"]["pricing"].value = assetRecord.pricing_terms_cost_comparison__c;
+ document.forms["editAssetForm"]["deliveryPlace"].value = assetRecord.delivery_terms_delivery_place__c;
+ 
+console.log('aman');
+if(assetRecord.delivery_terms_delivery_time__c!=null){
+    document.forms["editAssetForm"]["deliveryTime"].value = assetRecord.delivery_terms_delivery_time__c.split('T')[0];
+    console.log('aman');
+}
+ document.forms["editAssetForm"]["deliveryCost"].value = assetRecord.delivery_cost_incl__c;
+ document.forms["editAssetForm"]["quotations"].value = assetRecord.if_3_quotations_specify_reason__c;
+ document.forms["editAssetForm"]["reason"].value = assetRecord.reason_for_non_registered_gst_vendor__c;
+ document.forms["editAssetForm"]["pricing"].value = assetRecord.pricing_terms_cost_comparison__c;
+
+ /*
+  console.log('checkedchecked'+JSON.stringify($('#quotations').val));
+ $('#quotations').prop('checked', assetRecord.if_3_quotations_specify_reason__c);
+ $('#reason').prop('checked', assetRecord.reason_for_non_registered_gst_vendor__c);
+ $('#pricing').prop('checked', assetRecord.pricing_terms_cost_comparison__c);
+ */
+}).fail(function(jqXHR, status, error){
+ console.log('jqXHR : '+JSON.stringify(jqXHR));
+ console.log('textStatus : '+textStatus);
+ })
+ });
+ /* Clearing the fields when a modal is closed */
+ $('[data-dismiss=modal]').on('click', function (e) {
+ var $t = $(this),
+ target = $t[0].href || $t.data("target") || $t.parents('.modal') || [];
+ $(target)
+ .find("input,textarea,select")
+ .val('')
+ .end()
+ .find("input[type=checkbox], input[type=radio]")
+ .prop("checked", "")
+ .end();
+ })
+ $('.modal').on('hidden.bs.modal', function (e) {
+ $(this)
+ .find("input,textarea,select")
+ .val('')
+ .end()
+ .find("input[type=checkbox], input[type=radio]")
+ .prop("checked", "")
+ .end();
+ })
+})
+$('#editassetForm').on('click',function(event){
+ event.preventDefault();
+ event.stopPropagation();
+ event.stopImmediatePropagation();
+ //var assetId = document.getElementById('assetId').value;
+// console.log('assetId : '+assetId);
+ 
+ alert('Save Button Clicked !' );
+ var $inputs = $('#editAssetForm :input');
+ // not sure if you wanted this, but I thought I'd add it.
+ // get an associative array of just the values.
+ var values = {};
+ $inputs.each(function() {
+ values[this.name] = $(this).val();
+ console.log('fomvalues=> '+JSON.stringify(values));
+ });
+ alert('formValues : '+JSON.stringify(values));
+ $.ajax({
+ url : '/procurement/updateasset',
+ type:'post',
+ data: values,
+ dataType : 'json'
+ })
+ .done((response) => {
+ console.log('resonse :'+response);
+ 
+ })
+ .fail((jqXHR, status, error) => {
+ console.log('jqXHR '+JSON.stringify(jqXHR));
+ if(jqXHR.responseText=='succesfully Update!'){
+ alert('succesfully Update!');
+ $('#assetRequisitionEditModal').modal('hide');
+ }
+ else{
+ alert('Error in Updates :'+jqXHR.responseText);
+ }
+ 
+ }) 
+})
+ 
+ } 
+
+//approval
+function approvalFunctionality(){
+$('.approvalpopup').on('click',function(event){
+ //alert('Hello'+this.id);
+ event.stopImmediatePropagation();
+ event.stopPropagation();
+ let assetRequisitionFormId = this.id;
+ $('#approvalCommentModal').modal('show');
+ $('#submitForApproval').on('click', function(e){
+ e.stopImmediatePropagation();
+ e.stopPropagation();
+ let comment = document.getElementById('commentTextarea').value;
+ alert('comment : '+comment);
+ $.post('/procurement/sendProcurementApproval',{assetRequisitionFormId:assetRequisitionFormId, comment: comment }, function(response){
+ alert(response);
+ $('#approvalCommentModal').modal('hide');
+ }).fail(function(jqXHR, status, error){
+ })
+ });
+ });
+}
+//Accounts Approval
+function accountsApprovalFunctionality(){
+ $('.accountsapprovalpopup').on('click',function(event){
+ event.stopImmediatePropagation();
+ event.stopPropagation();
+ let assetRequisitionFormId = this.id;
+ console.log('inside Asset Requisition'+assetRequisitionFormId);
+ $('#accountsApprovalCommentModal').modal('show');
+ $('#submitForAccApproval').on('click', function(e){
+ e.stopImmediatePropagation();
+ e.stopPropagation();
+ let comment = document.getElementById('acccommentTextarea').value;
+ alert('comment : '+comment);
+ $.post('/procurement/sendProcurementAccountsApproval',{assetRequisitionFormId:assetRequisitionFormId, comment: comment }, function(response){
+ alert(response);
+ $('#accountsApprovalCommentModal').modal('hide');
+ })
+ .fail(function(jqXHR, status, error){
+ //$('#accountsApprovalCommentModal').modal('hide');
+ })
+ });
+ });
+      }      //c
+
+              $('#createAssetRequisitionFormButton').click(function() {
+        let projId = this.id;
+      console.log('Before Show create Asset Requisition Form Button Modal ');
+      $('#createAssetRequisitionForm').modal('show');
+      console.log('After Show Edit Modal ');
+      let lstActivityCodes = [];
+
+      $.ajax({
+            url : '/procurement/fetchActivityCodeforCreateNew',
+            data : {
+              projId : projId
+            },
+            dataType : 'json',
+            type : 'get'
+        })
+        .done((response) => {
+            console.log('response  '+JSON.stringify(response));
+            if(response.length > 0)
+                {
+                response.forEach((eachActivity) => {
+                console.log('eachActivity.name '+eachActivity.name);
+                $('#act')
+                .append($("<option></option>")
+                .attr("value",eachActivity.sfid)
+                .text(eachActivity.name))
+                }); 
+                }
+        })
+        .fail((jqXHR,text,err) => {
+            console.log('text  '+text + '  err '+err);
+        })
+
+      $('#createAssetRequisitionForm').modal('show');
+      $('#assetRequisitionSubmitbutton').on('click',function(event){
+      alert('clcker save button');
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      // alert('Save Button Clicked !');
+      var $inputs = $('#assetRequisitionForm :input');
+      // not sure if you wanted this, but I thought I'd add it.
+      // get an associative array of just the values.
+      var values = {};
+      $inputs.each(function() {
+      values[this.name] = $(this).val();
+      //console.log('fomvalues=> '+JSON.stringify(values));
+      });
+      alert('formValues : '+JSON.stringify(values));
+      $.ajax({
+      url : '/procurement/insertAsssetForm',
+      type:'post',
+      data: values,
+      dataType : 'json'
+      })
+      .done((response) => {
+      console.log('resonse :'+JSON.stringify(response));
+      
+      })
+      .fail((jqXHR, status, error) => {
+      console.log('jqXHR '+JSON.stringify(jqXHR));
+      let errorHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert">'+ jqXHR.responseText+
+      '<button type="button" class="close" data-dismiss="alert-success" aria-label="Close">'+
+      '<span aria-hidden="true">&times;</span>'+
+      '</button>'+
+      '</div>';
+      $('#errorMessages').empty();
+      $('#errorMessages').append(errorHtml); 
+      }) 
+      })
+      })
+    
+</script>

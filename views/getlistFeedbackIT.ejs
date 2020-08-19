@@ -1,0 +1,296 @@
+<% include ./partials/navbar %>
+<% include ./partials/footer %>
+<% include ./partials/messages %>
+<p id ="parentId"><%=procid %></p>
+
+
+<link rel="stylesheet" href="/stylesheets/table-sortable.css">
+<script src="/scripts/table-sortable.js" ></script>
+
+<h4 style="text-align: center;">FEEDBACK PROCUREMENT-IT</h4>
+<div class="container">
+    <div class="row mt-5 mb-3 align-items-center">
+        <div class="col-md-3">
+        <input type="text" class="form-control" placeholder="Search" id="searchField" style="margin-top: 5px;">
+        </div>
+        <div class="col-md-2 text-right">
+        <span class="pr-2">Rows Per Page:</span>
+        </div>
+        <div class="col-md-1">
+            <div class="d-flex justify-content-end">
+                <select class="custom-select" name="rowsPerPage" id="changeRows">
+                    <option value="5" selected>5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                </select>
+            </div>
+        </div>
+ </div>
+
+ <div id="procurementItListView" class="responsive ">
+
+ </div>
+
+</div>
+<!-- EDIT modal -->
+
+<div id="fedItEditModal" class="modal fade ">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">EDIT PROCUREMENT-IT FEEDBACK</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      
+        <div class="modal-body" id="editModalBody" >
+            <form name="editFeedit" id="editFeedit" >
+             <div class="form-group">
+                <div class="row">
+                    <div class="col-md-6">
+                      <label for="name">Feedbacks(IT) Name</label>
+                      <input type="text"  class="form-control" id="name" value="" readonly  name="name" required="true">
+                    </div>
+                    
+                    <div class="col-md-6">
+                    <label for="time">Timely submissions of Deliverables/Goods</label>
+                    <select id="time" name="time" class="form-control" required="true" >
+                        <option value="">None</option>
+                        <option value="Delighted">Delighted</option>
+                        <option value="Satisfactory">Satisfactory	</option>
+                        <option value="Dissatisfied">Dissatisfied</option>
+                        <option value="NA">NA</option>
+                    </select> 
+                    </div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <div class="row">
+                    <div class="col-md-6">
+                    <label for="quality">Work Quality/Goods Quality</label>
+                    <select id="quality" name="quality" class="form-control" required="true" >
+                        <option value="">None</option>
+                        <option value="Delighted">Delighted</option>
+                        <option value="Satisfactory">Satisfactory	</option>
+                        <option value="Dissatisfied">Dissatisfied</option>
+                        <option value="NA">NA</option>
+                    </select> 
+                   </div>
+
+                  <div class="col-md-6">
+                    <label for="issue">Issue Knowledge/ Expertise </label>
+                    <select id="issue" name="issue" class="form-control" required="true" >
+                        <option value="">None</option>
+                        <option value="Delighted">Delighted</option>
+                        <option value="Satisfactory">Satisfactory	</option>
+                        <option value="Dissatisfied">Dissatisfied</option>
+                        <option value="NA">NA</option>
+                    </select> 
+                 </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="quantity">Quantity Requested vs Received </label>
+                        <select id="quantity" name="quantity" class="form-control" required="true" >
+                            <option value="">None</option>
+                            <option value="Delighted">Delighted</option>
+                            <option value="Satisfactory">Satisfactory	</option>
+                            <option value="Dissatisfied">Dissatisfied</option>
+                            <option value="NA">NA</option>
+                        </select> 
+                    </div>
+                    <div class="col-md-6">
+                    <input type="hidden" class="form-control" id="feedid" value=""   name="feedid" >
+                    </div>
+                </div>
+            </div>
+          
+            <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary" id="editfeedbutton" data-dismiss="modal">Save</button>
+                  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+              </div>
+            </form>
+          </div>
+  </div>
+</div>
+
+</div>
+
+
+<!-- End of modal edit  -->
+
+
+
+
+
+
+<script>
+
+    $(document).ready(function(){
+
+        $('#parentId').hide();
+        let parentId=document.getElementById('parentId').innerHTML;
+        alert('parentId '+parentId);
+      /**************Table Sortable Start ***********/
+  
+          let columns ={
+              sequence : 'Sequence',
+              name: 'Feedbacks(IT) Name',
+              quantity:'Quantity Requested vs Received',
+              time : 'Timely submissions of Deliverables/Goods',
+              quality: 'Work Quality/Goods Quality',
+              issue:'Issue Knowledge/ Expertise',
+              editAction:'Action',
+          }
+          var table = $('#procurementItListView').tableSortable({
+            data :[],
+            columns,
+            searchField: '#searchField',
+            sorting: true,
+            rowsPerPage: 5,
+            pagination:true,
+            tableWillMount: () => {
+                console.log('table will mount')
+                
+            },
+            tableDidMount: () => {
+                console.log('table did mount');
+
+                $('#spinner').hide();
+            },
+            tableWillUpdate: () => {
+                console.log('table will update')
+            //  table.refresh();
+            // onLoadTask();
+            },
+            tableDidUpdate: () => {
+            console.log('table did update');
+           // anchorClickFunctionalities();
+            additionalEditFunctionality();
+            
+            },
+            tableWillUnmount: () => console.log('table will unmount'),
+            tableDidUnmount: () => console.log('table did unmount'),
+            onPaginationChange: function(nextPage, setPage) {
+                setPage(nextPage);
+            },
+        
+        });
+
+        /**************Table Sortable End ***********/
+
+        $('#changeRows').on('change', function() {
+        table.updateRowsPerPage(parseInt($(this).val(), 10));
+        })
+
+    /    $('#refresh').click(function() {
+            table.refresh(true);
+            onLoadTask();
+        })
+
+       $.ajax({
+            url : '/procurement/getfeedbackITlist',
+            type:'get',
+            data:{parentId:parentId},
+            dataType: 'json'
+       })
+       .done((response) => {
+           console.log('response it : '+JSON.stringify(response));
+           table.setData(response, columns);
+          // anchorClickFunctionalities();
+          
+          
+        })
+      .fail((jqXHR, status, error) =>{
+          console.log('jqXHR  : '+JSON.stringify(jqXHR));
+          console.log('error  : '+error);
+        })
+
+});
+function additionalEditFunctionality(){
+    $('.editfeedIt').on('click',function(event){
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        let procurementId = this.id;
+        alert('edit feed NON-IT ID=>'+procurementId);
+        $('#fedItEditModal').modal('show'); 
+        $.ajax({
+            url : '/procurement/getfeedbackdetailIT',
+            type:'get',
+            data : {
+                parentId : procurementId
+            },
+            dataType: 'json',
+            beforeSend : function(){
+              $('#detailLoadingSpinner').show();
+            }
+        })
+        .then((response)=>{
+          console.log('response fron It feedback Edit +='+JSON.stringify(response));
+          let feedDetail=response[0];
+          console.log('feedDetail'+feedDetail);
+          document.forms["editFeedit"]["name"].value = feedDetail.name;
+          document.forms["editFeedit"]["time"].value = feedDetail.timely_submissions_of_deliverables_goods__c;
+          document.forms["editFeedit"]["feedid"].value = feedDetail.sfid;
+          document.forms["editFeedit"]["issue"].value = feedDetail.issue_knowledge_expertise__c;
+          document.forms["editFeedit"]["quality"].value = feedDetail.work_quality_goods_quality__c;
+          document.forms["editFeedit"]["quantity"].value = feedDetail.quyantiut__c;
+          
+        })
+        .fail((jqXHR, status, error) =>{
+          $('#detailLoadingSpinner').show();
+          console.log('jqXHR  : '+JSON.stringify(jqXHR));
+          console.log('error  : '+error);
+        })
+    })
+    $('#editfeedbutton').on('click',function(event){
+
+        event.preventDefault();
+                  event.stopPropagation();
+                  event.stopImmediatePropagation();
+                  alert('Save Button Clicked !');
+                  var $inputs = $('#editFeedit :input');
+
+                  // not sure if you wanted this, but I thought I'd add it.
+                  // get an associative array of just the values.
+                  var values = {};
+                  $inputs.each(function() {
+                      values[this.name] = $(this).val();
+                      console.log('fomvalues=> '+JSON.stringify(values));
+                  });
+                  console.log('fomvalues=> '+JSON.stringify(values));
+                  alert('formValues : '+JSON.stringify(values));
+                  $.ajax({
+                    url : '/procurement/updateITfeedback',
+                    type:'post',
+                    data: values,
+                    dataType : 'json',
+                })
+                .done((data)=>{
+                    console.log('data '+JSON.stringify(data))
+                })
+                .fail((jqXHR, status, error) =>{
+                    console.log('jqXHR  : '+JSON.stringify(jqXHR));
+                    console.log('error  : '+error);
+                    let errorHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert">'+jqXHR.responseText+
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'+
+                          '<span aria-hidden="true">&times;</span>'+
+                        '</button>'+
+                      '</div>';
+                      $('#errorMessages').empty();
+                      $('#errorMessages').append(errorHtml);
+                    if(jqXHR.responseText=='succesfully Update')
+                    {
+                        alert('Successfully Update');
+                        $('#fedItEditModal').modal('hide');
+                        document.getElementById("editFeedit").reset();
+                    }
+                  })
+          })
+}
+</script>

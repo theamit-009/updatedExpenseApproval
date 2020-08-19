@@ -1,0 +1,236 @@
+<% include ./partials/navbar %>
+<% include ./partials/footer %>
+<% include ./partials/messages %>
+<h3 style="text-align: center;">Create New Implaned Vendor </h3>
+<div class="">
+  <div id="errorMessages"></div>
+<form method="POST" name="createvendor" id ="formdata">
+    <div class="form-group">
+        <div class="row">
+            <div class="col-md-6">
+              <label for="name">Impaneled Vendor ID </label>
+            </div>
+          <div class="col-md-6">
+            <label for="name">Vendor name </label>
+             <input type="text" class="form-control" id="name" value=""   name="name" > 
+          </div>
+        </div>
+    </div>
+    <div class="form-group">
+      <div class="row">
+          <div class="col-md-6">
+          <label for="state"> State  </label>
+          <select id="state" name="state" class="form-control item_unit"><option value="">Select</option></select>
+          </div>
+        <div class="col-md-6">
+          <label for="district">  District </label>
+         <select id="district" name="district" class="form-control item_unit" ><option value="">Select</option></select>
+        </div>
+      </div>
+  </div>
+    <div class="form-group">
+        <div class="row">
+            <div class="col-md-6">
+            <label for="authority"> Name of Signing Authority </label>
+            <input type="text"  class="form-control" id="authority"    name="authority" >
+            </div>
+          <div class="col-md-6">
+            <label for="cont">Contact No. </label>
+            <input type="number"  class="form-control" id="cont" value=""   name="cont" >
+          </div>
+        </div>
+    </div>
+
+    
+
+    <div class="form-group">
+        <div class="row">
+            <div class="col-md-6">
+            <label for="bankkDet"> Bank Detail </label>
+             <input type="text" class="form-control" id="bankkDet" value=""   name="bankkDet" > 
+            </div>
+          <div class="col-md-6">
+            <label for="ifsc">Bank IFSC Code </label>
+            <input type="text"  class="form-control" id="ifsc" value=""   name="ifsc" >
+          </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="row">
+            <div class="col-md-6">
+            <label for="pan"> Pan Number </label>
+             <input type="text" class="form-control" id="pan" value=""   name="pan" > 
+            </div>
+          <div class="col-md-6">
+            <label for="gst"> GST No.</label>
+            <input type="text"  class="form-control" id="gst" value=""   name="gst" >
+          </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="row">
+            <div class="col-md-6">
+            <label for="add"> Address  </label>
+             <input type="text" class="form-control" id="add" value=""   name="add" > 
+            </div>
+          <div class="col-md-6">
+            <label for="accNo">Bank Account Number </label>
+            <input type="number"  class="form-control" id="accNo" placeholder="Plaese Fill 0 If no Account Number" value="0"  name="accNo" >
+          </div>
+        </div>
+    </div>
+
+    
+    <div class="form-group">
+      <div class="row">
+        <div class="col-md-6">
+          <label for="url">Public  Quote Url  </label>
+           <input type="text" class="form-control" id="url" value=""   name="url" > 
+          </div>
+      <div class="col-md-6">
+        <label for="other"> Other/etc  </label>
+         <input type="text" class="form-control" id="other" value=""   name="other" > 
+        </div>
+    </div>
+  </div>
+  <button style="margin-left:850px ; border: 5px solid black; width:200px;height:90px;" type="submit" class="btn btn-primary" id="CreateVendor" >Save</button>
+ <!--  <button  class="btn btn-primary" href="/procurement/getVendorsList">GOTO Impaneled Vendor List</button> -->
+ <!-- <button type="button" style="margin-left:20px ; border: 5px solid black; width:200px;height:90px;" class="btn btn-primary" id="listOfVendor" data-dismiss="modal">ImapneledVendorList</button></form> -->
+</div>
+<script>
+    let st =["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh",
+    "Jharkhand", "Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha",
+    "Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura", "Uttar Pradesh","Uttarakhand","West Bengal"];
+    let dstrUP=["Noida","Ghaziabad","Kanpur Nagar","Kanpur Dehat","Unnao"];
+    let dstrUK=["Almora","Bageshwar","Chamoli","Champawat","Dehradun","Haridwar","Nainital","Pauri Garhwal","Pithoragarh"];
+    var itemsCategory = [ "Stationery", "Printing", "Electrical", "Events", "MaterialsOnRent", "Miscellaneous"];
+    var Stationery = ["A4 Size Paper Rim", "Pen", "Pencil", "Sharpner", "Eraser", "Markers", "Files", "White", "Magnetic Board", "Other Items"];
+    var Printing = ["Books", "Brochures", "Leaflets", "Binding", "Posters", "Backdrop", "Standees", "Caps", "Certificates", "Other Items"];
+    var Electrical = ["Lights", "UPS", "Inverter", "Battery", "Extension Board", "Heater", "Fans", "Other Items"];
+    var Events = ["Suggested Hostels", "Other Items"];
+    var MaterialsOnRent = ["Projector", "AV Systems", "Hardware Peripherals", "Other Items"];
+    var Miscellaneous = ["Maintenance", "Any Other Expense"];
+    
+    $(document).ready(function(){
+
+      if(st.length > 0)
+      {
+        for(let i=0; i < st.length; i++)
+        {
+          $('#state')
+          .append($("<option></option>")
+          .attr("value",st[i])
+          .text(st[i]))
+        }
+      }
+      $('#state').on('change',function(){
+        let state =this.value;
+        sts=state;
+        alert("selcted"+sts);
+        let select = document.getElementById("district");
+        let length = select.options.length;
+        for (i = length-1; i > 0; i--) {
+          select.options[i] = null;
+         }
+      //  alert('You Choose'+state);
+        if(state=='Uttar Pradesh')
+        {
+         $('#district').attr("readonly",false);
+         alert('You Choose=> '+state);
+         $('#district')
+           .append($("<option></option>")
+           .attr("value","")
+           .text("select District"))
+          for(let i=0; i <dstrUP.length; i++)
+          {
+           $('#district')
+           .append($("<option></option>")
+           .attr("value",dstrUP[i])
+           .text(dstrUP[i]))
+          }
+        }
+         else if(state=='Uttarakhand')
+        {
+         alert('You Choose=> '+state);
+         $('#district').attr("readonly",false);
+         $('#district').clearQueue();
+          for(let i=0; i <dstrUK.length; i++)
+          {
+           $('#district')
+           .append($("<option></option>")
+           .attr("value",dstrUK[i])
+           .text(dstrUK[i]))
+          }
+        }
+        else{
+         $('#district').attr("readonly",true);
+        }
+        $('#district').on('change',function(){
+         dstr=this.value;
+         alert('District choose =>'+dstr);
+       })           
+     })
+
+     
+     for(i=0;i<itemsCategory.length;i++)
+        {
+           $('#service')
+                   .append($("<option></option>")
+                   .attr("value",itemsCategory[i])
+                   .text(itemsCategory[i]));		
+        }
+
+        var subListValue="";
+        let itemsCategoryValue;
+        $('#service').on('change', function() {
+          $('#items').empty();
+          itemsCategoryValue = this.value;
+          subListValue = eval(this.value); 
+          alert('subListValue  '+subListValue);
+          for(i=0;i<subListValue.length;i++)
+          {
+           
+            $('#items')
+              .append($("<option></option>")
+              .attr("value",subListValue[i])
+              .text(subListValue[i]));		
+         }
+        })
+    })
+   
+    $('#listOfVendor').on('click',function(event){
+      event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                alert(' Button Clicked !');
+                location.href = "/procurement/getvendorListView";
+    })  
+
+    $(function () {
+      $('form#formdata').bind('submit', function () {
+        let data=$('form#formdata').serialize();
+        
+        alert('Sumbit button clicked!' +data);
+        $.ajax({
+          type: 'post',
+          url: '/procurement/saveVendor',   // Need to make changes in post method url
+          data:$('form#formdata').serialize(),
+          success: function (data) {
+            console.log(data);
+           // alert(data);
+            let errorHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert">'+ data+
+              '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'+
+                '<span aria-hidden="true">&times;</span>'+
+              '</button>'+
+            '</div>';
+            $('#errorMessages').empty();
+            $('#errorMessages').append(errorHtml); 
+          }
+        });
+        
+        return false;
+      })
+    })  
+</script>

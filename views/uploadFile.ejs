@@ -1,0 +1,86 @@
+<% include ./partials/navbar %>
+<% include ./partials/footer %>
+<p id="asset"><%=parentAssetId %></p>
+<form name="notesupload" id="notesupload" >
+    <div class="form-group">
+       <div class="row">
+           <div class="col-md-6">
+             <label for="assetName">Choose your file</label>
+              <input type="file" onChange="chkFile(this)" name="fileprety" id="fileprety" class="form-control" /><input type="hidden" value="demo" name="imgpath" id="file">
+           </div>  
+           <div><input type="hidden" value="<%=parentAssetId %>" name="hide" id="hide"></div>                 
+       </div>
+     </div>
+     
+     <div class="">
+         <button type="submit" class="btn btn-primary" id="uploadattachmentBuuton" data-dismiss="modal">Save</button>
+     </div>
+   </form>
+   <script>
+    $(document).ready(() => {
+
+        $('#asset').hide();
+        var assetId ='<%=parentAssetId %>';
+        $('#uploadattachmentBuuton').on('click',function(event){
+            event.preventDefault();
+                      event.stopPropagation();
+                      event.stopImmediatePropagation();
+                     
+                      alert('Save Button Clicked !' );
+                      var $inputs = $('#notesupload :input');
+    
+                      // not sure if you wanted this, but I thought I'd add it.
+                      // get an associative array of just the values.
+                      var values = {};
+                      $inputs.each(function() {
+                          values[this.name] = $(this).val();
+                      });
+                      values.assetid=assetId;
+                      alert('formValues : '+JSON.stringify(values));
+                      $.ajax({
+                        url : '/procurement/uploadFiless',
+                        type:'post',
+                        data: values,
+                        dataType : 'json'
+                    })
+                    .done((response) => {
+                          console.log('resonse   :'+response);
+                         
+                    })
+                    .fail((jqXHR, status, error) => {
+                          console.log('jqXHR  '+JSON.stringify(jqXHR));
+                         // alert('data succesfully inserted ');
+                          if(jqXHR.responseText=='succesfully inserted'){
+                            alert('data succesfully inserted ');
+                            $('#assetRequisitionEditModal').modal('hide');
+    
+                          }
+                          
+                    })  
+                    
+                })      
+
+
+    })
+
+    function chkFile(file) {
+        var file = file.files[0];
+        var formData = new FormData();
+        formData.append('formData', file);
+    
+        $.ajax({
+        type: "POST",
+        url: "/expense/uploadImage",    
+        cache: false,
+        dataType:'json',
+        processData: false,
+        contentType: false,
+        data: formData,
+        success: function (data) {
+            console.log('daat url '+JSON.stringify(data));
+          $('#file').val(data.url); 
+          console.log('file '+document.getElementById("file").value);         
+          }
+      });
+    }
+   </script>

@@ -1,0 +1,108 @@
+<% include ./partials/navbar %>
+<% include ./partials/footer %>
+<% include ./partials/messages %>
+<p id ="parentId"><%=procid %></p>
+<div  style="margin-left: 500px;margin-top:30x;">
+    <div id="errorMessages" ></div>
+    <form  method="POST" name="createfeed" id="formdata" >
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-3">
+                  <label for="name">Feedback Name </label>
+                  <!--  <input type="text" class="form-control" id="name" value=""   name="name" required ="true"> --> 
+                </div>
+              <div class="col-md-3">
+                <label for="Time">Timely submissions of all Deliverables </label>
+                <select id="time" name="time" class="form-control" required="true" >
+                    <option value="">None</option>
+                    <option value="Delighted">Delighted</option>
+                    <option value="Satisfactory">Satisfactory	</option>
+                    <option value="Dissatisfied">Dissatisfied</option>
+                    <option value="NA">NA</option>
+                </select> 
+              </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-3">
+                  <label for="quality">Work Quality/Goods Quality </label>
+                  <select id="quality" name="quality" class="form-control" required="true" >
+                    <option value="">None</option>
+                    <option value="Delighted">Delighted</option>
+                    <option value="Satisfactory">Satisfactory	</option>
+                    <option value="Dissatisfied">Dissatisfied</option>
+                    <option value="NA">NA</option>
+                </select> 
+                </div>
+              <div class="col-md-3">
+                <label for="issue">Issue Knowledge/ Expertise</label>
+                <select id="issue" name="issue" class="form-control" required="true" >
+                    <option value="">None</option>
+                    <option value="Delighted">Delighted</option>
+                    <option value="Satisfactory">Satisfactory	</option>
+                    <option value="Dissatisfied">Dissatisfied</option>
+                    <option value="NA">NA</option>
+                </select> 
+              </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="quantity">Quantity Requested vs Received</label>
+                    <select id="quantity" name="quantity" class="form-control" required="true" >
+                        <option value="">None</option>
+                        <option value="Delighted">Delighted</option>
+                        <option value="Satisfactory">Satisfactory	</option>
+                        <option value="Dissatisfied">Dissatisfied</option>
+                        <option value="NA">NA</option>
+                    </select> 
+                  </div>
+                <div class="col-md-3">
+                  <input type="hidden" class="form-control" id="quality" value="<%=procid %>"   name="procid" >
+                </div>
+            </div>
+        </div>
+        <button style="margin-left:280px ; border: 5px solid black; width:200px;height:90px;" type="submit" class="btn btn-primary" id="createFEED" >Save</button>
+  </form>  
+</div>
+<script>
+    $(document).ready(function(){
+
+        $('#parentId').hide();
+        let parentId=document.getElementById('parentId').innerHTML;
+        alert('parentId '+parentId);
+    })
+
+    $(function () {
+        $('form#formdata').bind('submit', function () {
+          let data=$('form#formdata').serialize();
+          alert('Sumbit button clicked!' +data);
+          console.log('data _+>'+data);
+          $.ajax({
+            type: 'post',
+            url: '/procurement/savefeedbackIT',   // Need to make changes in post method url
+            data:$('form#formdata').serialize(),
+            success: function (data) {
+              console.log(data);
+             // alert(data);
+              let errorHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert">'+ data+
+                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'+
+                  '<span aria-hidden="true">&times;</span>'+
+                '</button>'+
+              '</div>';
+              $('#errorMessages').empty();
+              $('#errorMessages').append(errorHtml);
+              if(data=='succesfully inserted') 
+              {
+                document.getElementById("formdata").reset();
+              }
+            }
+          });
+          
+          return false;
+
+        })
+    })
+</script>
